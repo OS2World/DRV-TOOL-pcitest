@@ -1,0 +1,195 @@
+#******************************************************************************
+#  Makefile for the PCITEST directory
+#
+#       SCCSID = @(#)makefile   6.3 91/05/29
+#
+#       IBM/Microsoft Confidential
+#
+#       Copyright (c) IBM Corporation 1987, 1989
+#       Copyright (c) Microsoft Corporation 1987, 1989
+#
+#       All Rights Reserved
+#
+#******************************************************************************
+
+#
+# ******  NOTE  ******
+#
+#        If you are using a SED command with TAB characters, many editors
+#        will expand tabs causing unpredictable results in other programs.
+#
+#        Documentation:
+#
+#        Using SED command with TABS. Besure to invoke set tab save option
+#        on your editor. If you don't, the program 'xyz' will not work
+#        correctly.
+#
+
+#****************************************************************************
+#  Dot directive definition area (usually just suffixes)
+#****************************************************************************
+
+.SUFFIXES:
+.SUFFIXES: .exe .def .lnk .lib .obj .c
+
+#****************************************************************************
+#  Environment Setup for the component(s).
+#****************************************************************************
+
+#
+# Conditional Setup Area and User Defined Macros
+#
+
+#
+# Compiler Location w/ includes, libs and tools
+#
+
+H         = ..\..\..\h
+INC       = ..\..\..\inc
+LIB       = ..\..\..\lib
+TOOLSPATH = ..\..\..\tools
+
+#
+# Since the compiler/linker and other tools use environment
+# variables ( INCLUDE, LIB, etc ) in order to get the location of files,
+# the following line will check the environment for the LIFE of the
+# makefile and will be specific to this set of instructions. All MAKEFILES
+# are requested to use this format to insure that they are using the correct
+# level of files and tools.
+#
+
+!if [set INCLUDE=$(H);$(INC)] || [set LIB=$(LIB)] || [set PATH=$(TOOLSPATH)]
+!endif
+
+
+#
+# Compiler/tools Macros
+#
+
+AS=masm
+CC=cl
+IMPLIB=implib
+IPF=ipfc
+LIBUTIL=lib
+LINK=link
+MAPSYM=mapsym
+RC=rc
+
+#
+# Compiler and Linker Options
+#
+
+AFLAGS = -ML
+AINC   = -I$(H) -I$(INC) -I$(MAKEDIR)
+CINC   = -I. -I$(H) -I$(MAKEDIR)
+CFLAGS = -Zep -W3 -G2 -AS -Oilt -nologo -c
+LFLAGS = /noe /nod /map /FAR /EXEPACK /ALIGN:16
+#LFLAGS = /NOD /NOE /MAP /A:16
+RFLAGS = -r
+LIBS   = $(LIB)\slibcep.lib $(LIB)\comsubs.lib $(LIB)\os2286.lib
+BINDLIB= $(LIB)\doscalls.lib $(LIB)\utilapi.lib
+DEF = pcitest.def
+
+#****************************************************************************
+# Set up Macros that will contain all the different dependencies for the
+# executables and dlls etc. that are generated.
+#****************************************************************************
+
+OBJ =  pcitest.obj
+
+#****************************************************************************
+#   Setup the inference rules for compiling and assembling source code to
+#   obejct code.
+#****************************************************************************
+
+.asm.obj:
+        $(AS) $(AFLAGS) $(AINC) $< ;
+
+.c.obj:
+        $(CC) $(CFLAGS) $(CINC) $< ;
+
+.rc.obj:
+        $(RC) $(RFLAGS) $< ;
+
+
+#****************************************************************************
+#   Target Information
+#****************************************************************************
+#
+# This is a very important step. The following small amount of code MUST
+# NOT be removed from the program. The following directive will do
+# dependency checking every time this component is built UNLESS the
+# following is performed:
+#                    A specific tag is used -- ie. all
+#
+# This allows the developer as well as the B & I group to perform incremental
+# build with a degree of accuracy that has not been used before.
+# There are some instances where certain types of INCLUDE files must be
+# created first. This type of format will allow the developer to require
+# that file to be created first. In order to achive that, all that has to
+# be done is to make the DEPEND.MAK tag have your required target. Below is
+# an example:
+#
+#    depend.mak:   { your file(s) } dephold
+#
+# Please DON'T remove the following line
+#
+
+!include      "$(H)\common.mak"
+
+#
+# Should be the default tag for all general processing
+#
+
+all:    pcitest.exe
+
+clean:
+        if exist *.lnk  del *.lnk
+        if exist *.obj  del *.obj
+        if exist *.map  del *.map
+        if exist *.old  del *.old
+        if exist *.lst  del *.lst
+        if exist *.com  del *.com
+        if exist *.exe  del *.exe
+        if exist *.sym  del *.sym
+        if exist *.sys  del *.sys
+
+
+#*****************************************************************************
+#   Specific Description Block Information
+#*****************************************************************************
+
+# This section would only be for specific direction as to how to create
+# unique elements that are necessary to the build process. This could
+# be compiling or assembling, creation of DEF files and other unique
+# files.
+# If all compiler and assembly rules are the same, use an inference rule to
+# perform the compilation.
+#
+
+
+
+pcitest.exe:  $(DEF) $(OBJ) $(LIBS) makefile
+        $(LINK) $(LFLAGS) @<<$(@B).lnk
+$(OBJ)
+$@
+$*.map
+$(LIBS)
+$(DEF)
+<<keep
+        $(MAPSYM) $*
+
+#****************************************************************************
+#  Dependency generation and Checking
+#****************************************************************************
+
+depend.mak:  dephold
+        touch depchk
+        includes -e -l -I. -I$(H) -I$(INC) -P$$(H)=$(H) *.c *.asm >$@
+        -del depchk
+
+dephold:
+        touch $@
+
+!include depend.mak
+

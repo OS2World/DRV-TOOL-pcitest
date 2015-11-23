@@ -1,0 +1,14 @@
+;      SCCSID = @(#)print.def   6.4 90/01/26
+; ****************************************************************************
+; *                                                                          *
+; *                       IBM/Microsoft Confidential                         *
+; *                                                                          *
+; *                 Copyright (c) IBM Corporation  1987, 1990                *
+; *                 Copyright (c) Microsoft Corp.  1987, 1990                *
+; *                           All Rights Reserved                            *
+; *                                                                          *
+; ****************************************************************************
+NAME WINDOWCOMPAT LONGNAMES
+STACKSIZE 16384
+HEAPSIZE  1000
+

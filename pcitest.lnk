@@ -1,0 +1,5 @@
+pcitest.obj
+pcitest.exe
+pcitest.map
+..\..\..\lib\slibcep.lib ..\..\..\lib\comsubs.lib ..\..\..\lib\os2286.lib
+pcitest.def
